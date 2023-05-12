@@ -14,7 +14,7 @@ conn = None
 
 while conn is None:
     try:
-        conn = psycopg2.connect(dbname="authentication", user="postgres", password="postgres", host="activities_persistence")
+        conn = psycopg2.connect(dbname="authentication", user="postgres", password="postgres", host="authentication_persistence")
         print("DB connection succesful")
     except psycopg2.OperationxalError:
         import time

@@ -11,13 +11,10 @@ services:
     container_name: songs_persistence_container
     restart: always
     environment:
-      - POSTGRES_USER=postgres  # Can be any username & password combination, but we need to use the same combination in the code in 'songs'
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      # Map the songs_persistence folder to the docker-entrypoint-initdb.d folder in the container.
-      # This will ensure that the necessary files are present in the container for initializing the database(s)
       - ./songs_persistence/:/docker-entrypoint-initdb.d
-      # Map the psql data from the container to a virtual volume, thus preserving the data after the container is stopped.
       - songs_data:/var/lib/postgresql/data
     command: bash -c "chmod +x /docker-entrypoint-initdb.d/init.sh && /usr/local/bin/docker-entrypoint.sh postgres"
 
@@ -34,13 +31,10 @@ services:
     container_name: activities_persistence_container
     restart: always
     environment:
-      - POSTGRES_USER=postgres  # Can be any username & password combination, but we need to use the same combination in the code in 'songs'
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      # Map the songs_persistence folder to the docker-entrypoint-initdb.d folder in the container.
-      # This will ensure that the necessary files are present in the container for initializing the database(s)
       - ./activities_persistence/:/docker-entrypoint-initdb.d
-      # Map the psql data from the container to a virtual volume, thus preserving the data after the container is stopped.
       - activities_data:/var/lib/postgresql/data
     command: bash -c "chmod +x /docker-entrypoint-initdb.d/init.sh && /usr/local/bin/docker-entrypoint.sh postgres"
 
@@ -51,6 +45,66 @@ services:
       - 5002:5000
     depends_on:
       - activities_persistence
+
+  authentication_persistence:
+    image: docker.io/postgres
+    container_name: authentication_persistence_container
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./authentication_persistence/:/docker-entrypoint-initdb.d
+      - authentication_data:/var/lib/postgresql/data
+    command: bash -c "chmod +x /docker-entrypoint-initdb.d/init.sh && /usr/local/bin/docker-entrypoint.sh postgres"
+
+  authentication:
+    build: ./authentication
+    container_name: authentication_container
+    ports:
+      - 5003:5000
+    depends_on:
+      - authentication_persistence
+
+  playlists_persistence:
+    image: docker.io/postgres
+    container_name: playlists_persistence_container
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./playlists_persistence/:/docker-entrypoint-initdb.d
+      - playlists_data:/var/lib/postgresql/data
+    command: bash -c "chmod +x /docker-entrypoint-initdb.d/init.sh && /usr/local/bin/docker-entrypoint.sh postgres"
+
+  playlists:
+    build: ./playlists
+    container_name: playlists_container
+    ports:
+      - 5004:5000
+    depends_on:
+      - playlists_persistence
+
+  socials_persistence:
+    image: docker.io/postgres
+    container_name: socials_persistence_container
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./socials_persistence/:/docker-entrypoint-initdb.d
+      - socials_data:/var/lib/postgresql/data
+    command: bash -c "chmod +x /docker-entrypoint-initdb.d/init.sh && /usr/local/bin/docker-entrypoint.sh postgres"
+
+  socials:
+    build: ./socials
+    container_name: socials_container
+    ports:
+      - 5005:5000
+    depends_on:
+      - socials_persistence
 
   gui:
     build: ./gui

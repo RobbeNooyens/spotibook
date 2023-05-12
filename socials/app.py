@@ -7,14 +7,14 @@ parser = reqparse.RequestParser()
 parser.add_argument('title')
 parser.add_argument('artist')
 
-app = Flask("playlists")
+app = Flask("socials")
 api = Api(app)
 
 conn = None
 
 while conn is None:
     try:
-        conn = psycopg2.connect(dbname="playlists", user="postgres", password="postgres", host="playlists_persistence")
+        conn = psycopg2.connect(dbname="socials", user="postgres", password="postgres", host="socials_persistence")
         print("DB connection succesful")
     except psycopg2.OperationxalError:
         import time
