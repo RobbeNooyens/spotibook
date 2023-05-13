@@ -6,23 +6,19 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "playlists" <<-EOSQL
-    CREATE TABLE playlist(
-        artist TEXT NOT NULL,
-        title TEXT NOT NULL,
-        PRIMARY KEY (artist, title)
+    CREATE TABLE playlist (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        owner INTEGER NOT NULL
     );
-    CREATE TABLE playlist_songs(
-        artist TEXT NOT NULL,
-        title TEXT NOT NULL,
-        PRIMARY KEY (artist, title)
+    CREATE TABLE playlist_songs (
+        playlist_id INTEGER NOT NULL,
+        song_id INTEGER NOT NULL,
+        PRIMARY KEY (playlist_id, song_id)
     );
-    CREATE TABLE playlist_editors(
-        artist TEXT NOT NULL,
-        title TEXT NOT NULL,
-        PRIMARY KEY (artist, title)
+    CREATE TABLE playlist_editors (
+        playlist_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        PRIMARY KEY (playlist_id, user_id)
     );
-    COPY songs (artist, title)
-    FROM '/docker-entrypoint-initdb.d/mil_song.csv'
-    DELIMITER ','
-    CSV HEADER;
 EOSQL

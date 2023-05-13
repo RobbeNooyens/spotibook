@@ -6,13 +6,13 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "socials" <<-EOSQL
-    CREATE TABLE friends(
-        artist TEXT NOT NULL,
-        title TEXT NOT NULL,
-        PRIMARY KEY (artist, title)
+    CREATE TABLE friendship (
+        user1 INTEGER NOT NULL,
+        user2 INTEGER NOT NULL,
+        PRIMARY KEY (user1, user2)
     );
-    COPY songs (artist, title)
-    FROM '/docker-entrypoint-initdb.d/mil_song.csv'
+    COPY friendship (user1, user2)
+    FROM '/docker-entrypoint-initdb.d/friendships.csv'
     DELIMITER ','
     CSV HEADER;
 EOSQL

@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 # The Username & Password of the currently logged-in User
 username = None
+user_id = None
 password = None
 
 session_data = dict()
@@ -27,12 +28,14 @@ def feed():
     # Get the feed of the last N activities of your friends.
     # ================================
 
+    global user_id
     global username
 
     N = 10
 
     if username is not None:
-        feed = []  # TODO: call
+        # make a call to the microservice activities to get the feed
+        feed = requests.get(f"http://activities:5000/activity?user={user_id}&results={N}").json()
     else:
         feed = []
 
@@ -64,14 +67,15 @@ def actual_login():
     # microservice returns True if correct combination, False if otherwise.
     # Also pay attention to the status code returned by the microservice.
     # ================================
-    success = None  # TODO: call
+    success = requests.get(f"http://authentication:5000/login?username={req_username}&password={req_password}").json()
 
     save_to_session('success', success)
     if success:
-        global username, password
+        global username, password, user_id
 
         username = req_username
         password = req_password
+        user_id = requests.get(f"http://authentication:5000/user?username={username}").json()
 
     return redirect('/login')
 
@@ -96,7 +100,7 @@ def actual_register():
     # Registration is successful if a user with the same username doesn't exist yet.
     # ================================
 
-    success = None  # TODO: call
+    success = requests.post(f"http://authentication:5000/register?username={req_username}&password={req_password}").json()
     save_to_session('success', success)
 
     if success:
@@ -113,6 +117,7 @@ def friends():
     success = load_from_session('success')
 
     global username
+    global user_id
 
     # ================================
     # FEATURE 4
@@ -121,9 +126,9 @@ def friends():
     # ================================
 
     if username is not None:
-        friend_list = []
+        friend_list = requests.get(f"http://socials:5000/friends?user={user_id}").json()
     else:
-        friend_list = []  # TODO: call
+        friend_list = []
 
     return render_template('friends.html', username=username, password=password, success=success, friend_list=friend_list)
 
@@ -141,7 +146,7 @@ def add_friend():
     global username
     req_username = request.form['username']
 
-    success = None  # TODO: call
+    success = requests.post(f"http://friends:5000/friends?user1={username}&user2={req_username}").json()
     save_to_session('success', success)
 
     return redirect('/friends')
@@ -150,6 +155,7 @@ def add_friend():
 @app.route('/playlists')
 def playlists():
     global username
+    global user_id
 
     my_playlists = []
     shared_with_me = []
@@ -161,8 +167,8 @@ def playlists():
         # Get all playlists you created and all playlist that are shared with you. (list of id, title pairs)
         # ================================
 
-        my_playlists = []  # TODO: call
-        shared_with_me = []  # TODO: call
+        my_playlists = requests.get(f"http://playlists:5000/playlist?owner={user_id}").json()
+        shared_with_me = requests.get(f"http://playlists:5000/playlist/shared?user_id={user_id}").json()
 
     return render_template('playlists.html', username=username, password=password, my_playlists=my_playlists, shared_with_me=shared_with_me)
 
@@ -177,7 +183,7 @@ def create_playlist():
     global username
     title = request.form['title']
 
-    # TODO: call
+    requests.put(f"http://playlists:5000/playlist?owner={username}&name={title}")
 
     return redirect('/playlists')
 
@@ -189,7 +195,7 @@ def a_playlist(playlist_id):
     #
     # List all songs within a playlist
     # ================================
-    songs = [] # TODO: call
+    songs = requests.get(f"http://playlists:5000/playlist/songs?playlist_id={playlist_id}").json()
     return render_template('a_playlist.html', username=username, password=password, songs=songs, playlist_id=playlist_id)
 
 
@@ -215,14 +221,16 @@ def invite_user_to_playlist(playlist_id):
     # ================================
     recipient = request.form['user']
 
-    # TODO: call
+    recipient_id = requests.get(f"http://authentication:5000/user?username={recipient}").json()
+    requests.post(f"http://playlists:5000/playlist/shared?playlist_id={playlist_id}&user_id={recipient_id}")
     return redirect(f'/playlists/{playlist_id}')
 
 
 @app.route("/logout")
 def logout():
-    global username, password
+    global username, password, user_id
 
     username = None
+    user_id = None
     password = None
     return redirect('/')

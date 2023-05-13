@@ -8,7 +8,7 @@ volumes:
 services:
   songs_persistence:
     image: docker.io/postgres
-    container_name: songs_persistence_container
+    container_name: songs_persistence
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -20,7 +20,7 @@ services:
 
   songs:
     build: ./songs
-    container_name: songs_container
+    container_name: songs
     ports:
       - 5001:5000
     depends_on:
@@ -28,7 +28,7 @@ services:
 
   activities_persistence:
     image: docker.io/postgres
-    container_name: activities_persistence_container
+    container_name: activities_persistence
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -40,7 +40,7 @@ services:
 
   activities:
     build: ./activities
-    container_name: activities_container
+    container_name: activities
     ports:
       - 5002:5000
     depends_on:
@@ -48,7 +48,7 @@ services:
 
   authentication_persistence:
     image: docker.io/postgres
-    container_name: authentication_persistence_container
+    container_name: authentication_persistence
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -60,7 +60,7 @@ services:
 
   authentication:
     build: ./authentication
-    container_name: authentication_container
+    container_name: authentication
     ports:
       - 5003:5000
     depends_on:
@@ -68,7 +68,7 @@ services:
 
   playlists_persistence:
     image: docker.io/postgres
-    container_name: playlists_persistence_container
+    container_name: playlists_persistence
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -80,7 +80,7 @@ services:
 
   playlists:
     build: ./playlists
-    container_name: playlists_container
+    container_name: playlists
     ports:
       - 5004:5000
     depends_on:
@@ -88,7 +88,7 @@ services:
 
   socials_persistence:
     image: docker.io/postgres
-    container_name: socials_persistence_container
+    container_name: socials_persistence
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -100,7 +100,7 @@ services:
 
   socials:
     build: ./socials
-    container_name: socials_container
+    container_name: socials
     ports:
       - 5005:5000
     depends_on:
@@ -108,7 +108,7 @@ services:
 
   gui:
     build: ./gui
-    container_name: gui_container
+    container_name: gui
     ports:
       - 5000:5000
 

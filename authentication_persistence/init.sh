@@ -6,13 +6,13 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "authentication" <<-EOSQL
-    CREATE TABLE users(
-        artist TEXT NOT NULL,
-        title TEXT NOT NULL,
-        PRIMARY KEY (artist, title)
+    CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL
     );
-    COPY songs (artist, title)
-    FROM '/docker-entrypoint-initdb.d/mil_song.csv'
+    COPY users (name, password)
+    FROM '/docker-entrypoint-initdb.d/accounts.csv'
     DELIMITER ','
     CSV HEADER;
 EOSQL
