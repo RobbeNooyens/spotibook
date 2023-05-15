@@ -5,9 +5,9 @@ app = Flask(__name__)
 
 
 # The Username & Password of the currently logged-in User
-username = None
-user_id = None
-password = None
+username = "test"
+user_id = 2
+password = "test"
 
 session_data = dict()
 
@@ -143,10 +143,10 @@ def add_friend():
     # microservice returns True if the friend request is successful (the friend exists & is not already friends), False if otherwise
     # ==============================
 
-    global username
+    global username, user_id
     req_username = request.form['username']
 
-    success = requests.post(f"http://friends:5000/friends?user1={username}&user2={req_username}").json()
+    success = requests.post(f"http://socials:5000/friends?user1={user_id}&user2={req_username}").json()
     save_to_session('success', success)
 
     return redirect('/friends')
@@ -167,7 +167,8 @@ def playlists():
         # Get all playlists you created and all playlist that are shared with you. (list of id, title pairs)
         # ================================
 
-        my_playlists = requests.get(f"http://playlists:5000/playlist?owner={user_id}").json()
+        my_playlists = requests.get(f"http://playlists:5000/playlist?owner={user_id}")
+        my_playlists = my_playlists.json() if my_playlists.content else []
         shared_with_me = requests.get(f"http://playlists:5000/playlist/shared?user_id={user_id}").json()
 
     return render_template('playlists.html', username=username, password=password, my_playlists=my_playlists, shared_with_me=shared_with_me)
@@ -208,6 +209,7 @@ def add_song_to_playlist(playlist_id):
     # ================================
     title, artist = request.form['title'], request.form['artist']
 
+    requests.post(f"http://playlists:5000/playlist/songs?playlist_id={playlist_id}&title={title}&artist={artist}")
     # TODO: call
     return redirect(f'/playlists/{playlist_id}')
 

@@ -1,3 +1,4 @@
+import requests
 from flask import Flask
 from flask import request as flask_request
 from flask_restful import Resource, Api, reqparse
@@ -26,9 +27,24 @@ while conn is None:
 
 
 def add_friend(user1, user2):
+    # Get userid for user2
+    response = requests.get(f"http://authentication:5000/user?username={user2}")
+    if not response.ok:
+        return False
+    user2_id = response.json()
     try:
         cur = conn.cursor()
-        cur.execute("INSERT INTO friendship (user1, user2) VALUES (%s, %s);", (user1, user2))
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM friendship
+                WHERE (user1 = %s AND user2 = %s)
+            ) AS entry_exists;
+        """, (user1, user2_id))
+        exists = cur.fetchone()[0]
+        if exists:
+            return False
+        cur.execute("INSERT INTO friendship (user1, user2) VALUES (%s, %s);", (user1, user2_id))
         conn.commit()
         return True
     except psycopg2.IntegrityError:
@@ -43,7 +59,7 @@ class Friends(Resource):
         cur.execute("SELECT user2 FROM friendship WHERE user1 = %s;", (args['user'],))
         return [x[0] for x in cur.fetchall()]
 
-    def put(self):
+    def post(self):
         args = flask_request.args
         return add_friend(args['user1'], args['user2'])
 

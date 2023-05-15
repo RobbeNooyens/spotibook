@@ -21,4 +21,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "playlists" <<-EOSQ
         user_id INTEGER NOT NULL,
         PRIMARY KEY (playlist_id, user_id)
     );
+    COPY playlist (name, owner)
+    FROM '/docker-entrypoint-initdb.d/playlists.csv'
+    DELIMITER ','
+    CSV HEADER;
 EOSQL
