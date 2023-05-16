@@ -9,17 +9,18 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "playlists" <<-EOSQ
     CREATE TABLE playlist (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        owner INTEGER NOT NULL
+        owner VARCHAR(255) NOT NULL
     );
     CREATE TABLE playlist_songs (
         playlist_id INTEGER NOT NULL,
-        song_id INTEGER NOT NULL,
-        PRIMARY KEY (playlist_id, song_id)
+        title VARCHAR(255) NOT NULL,
+        artist VARCHAR(255) NOT NULL,
+        PRIMARY KEY (playlist_id, title, artist)
     );
     CREATE TABLE playlist_editors (
         playlist_id INTEGER NOT NULL,
-        user_id INTEGER NOT NULL,
-        PRIMARY KEY (playlist_id, user_id)
+        username VARCHAR NOT NULL,
+        PRIMARY KEY (playlist_id, username)
     );
     COPY playlist (name, owner)
     FROM '/docker-entrypoint-initdb.d/playlists.csv'

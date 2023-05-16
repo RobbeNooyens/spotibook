@@ -27,36 +27,24 @@ while conn is None:
 
 
 def add_friend(user1, user2):
-    # Get userid for user2
-    response = requests.get(f"http://authentication:5000/user?username={user2}")
-    if not response.ok:
-        return False
-    user2_id = response.json()
     try:
         cur = conn.cursor()
-        cur.execute("""
-            SELECT EXISTS (
-                SELECT 1
-                FROM friendship
-                WHERE (user1 = %s AND user2 = %s)
-            ) AS entry_exists;
-        """, (user1, user2_id))
-        exists = cur.fetchone()[0]
-        if exists:
+        # Check if the users exist
+        user_exists = requests.get("http://authentication:5000/user", params={'username': user2})
+        if not user_exists.ok or not user_exists.json():
             return False
-        cur.execute("INSERT INTO friendship (user1, user2) VALUES (%s, %s);", (user1, user2_id))
+        cur.execute("INSERT INTO friendship (username, friend) VALUES (%s, %s);", (user1, user2))
         conn.commit()
         return True
     except psycopg2.IntegrityError:
         return False
-    return False
 
 
 class Friends(Resource):
     def get(self):
         args = flask_request.args
         cur = conn.cursor()
-        cur.execute("SELECT user2 FROM friendship WHERE user1 = %s;", (args['user'],))
+        cur.execute("SELECT friend FROM friendship WHERE username = %s;", (args['user'],))
         return [x[0] for x in cur.fetchall()]
 
     def post(self):

@@ -42,17 +42,7 @@ def song_exists(title, artist):
 
 class AllSongsResource(Resource):
     def get(self):
-        limit = 1000
-        cur = conn.cursor()
-        if "title" in flask_request.args and "artist" not in flask_request.args:
-            cur.execute(f"SELECT id, title, artist FROM songs WHERE title = %s LIMIT {limit};", (flask_request.args['title'],))
-        elif "title" not in flask_request.args and "artist" in flask_request.args:
-            cur.execute(f"SELECT id, title, artist FROM songs WHERE artist = %s LIMIT {limit};", (flask_request.args['artist'],))
-        elif "title" in flask_request.args and "artist" in flask_request.args:
-            cur.execute(f"SELECT id, title, artist FROM songs WHERE title = %s AND artist = %s LIMIT {limit};", (flask_request.args['title'], flask_request.args['artist']))
-        else:
-            cur.execute(f"SELECT id, title, artist FROM songs LIMIT {limit};")
-        return cur.fetchall()
+        return all_songs()
 
 class SongExists(Resource):
 

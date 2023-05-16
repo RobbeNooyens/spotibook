@@ -30,7 +30,7 @@ while conn is None:
             cur = conn.cursor()
             cur.execute("SELECT id, name FROM playlist WHERE owner = %s;", (args['owner'],))
             return cur.fetchall()
-        def put(self):
+        def post(self):
             args = flask_request.args
             cur = conn.cursor()
             cur.execute("INSERT INTO playlist (name, owner) VALUES (%s, %s);", (args['name'], args['owner']))
@@ -39,7 +39,7 @@ while conn is None:
 
     # The user can add songs to a playlist.
     class PlaylistSongs(Resource):
-        def put(self):
+        def post(self):
             args = flask_request.args
             cur = conn.cursor()
             cur.execute("INSERT INTO playlist_songs (playlist_id, song_id) VALUES (%s, %s);", (args['playlist_id'], args['song_id']))
@@ -54,7 +54,7 @@ while conn is None:
 
     # The user can share a playlist with another user.
     class SharedPlaylists(Resource):
-        def put(self):
+        def post(self):
             args = flask_request.args
             cur = conn.cursor()
             cur.execute("INSERT INTO playlist_editors (playlist_id, user_id) VALUES (%s, %s);", (args['playlist_id'], args['user_id']))

@@ -37,18 +37,6 @@ def user_exists(username):
     return bool(cur.fetchone()[0])  # Either True or False
 
 
-def user_by_id(user_id):
-    cur = conn.cursor()
-    cur.execute("SELECT name FROM users WHERE id = %s;", (user_id,))
-    return cur.fetchone()[0]  # Either True or False
-
-
-def user_by_name(username):
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM users WHERE name = %s;", (username,))
-    return cur.fetchone()[0]
-
-
 def register(username, password):
     if not user_exists(username):
         cur = conn.cursor()
@@ -59,7 +47,7 @@ def register(username, password):
 
 
 class Register(Resource):
-    def put(self):
+    def post(self):
         args = flask_request.args
         return register(args['username'], args['password'])
 
@@ -69,15 +57,11 @@ class Login(Resource):
         args = flask_request.args
         return login(args['username'], args['password'])
 
+
 class User(Resource):
     def get(self):
         args = flask_request.args
-        if 'username' in args:
-            return user_by_name(args['username'])
-        elif 'user_id' in args:
-            return user_by_id(args['user_id'])
-        else:
-            return make_response("Please provide a username or user id", 400)
+        return user_exists(args['username'])
 
 
 api.add_resource(Register, '/register')

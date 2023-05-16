@@ -6,7 +6,6 @@ app = Flask(__name__)
 
 # The Username & Password of the currently logged-in User
 username = "test"
-user_id = 2
 password = "test"
 
 session_data = dict()
@@ -28,14 +27,13 @@ def feed():
     # Get the feed of the last N activities of your friends.
     # ================================
 
-    global user_id
     global username
 
     N = 10
 
     if username is not None:
         # make a call to the microservice activities to get the feed
-        feed = requests.get(f"http://activities:5000/activity?user={user_id}&results={N}").json()
+        feed = requests.get(f"http://activities:5000/activity?user={username}&results={N}").json()
     else:
         feed = []
 
@@ -71,11 +69,10 @@ def actual_login():
 
     save_to_session('success', success)
     if success:
-        global username, password, user_id
+        global username, password
 
         username = req_username
         password = req_password
-        user_id = requests.get(f"http://authentication:5000/user?username={username}").json()
 
     return redirect('/login')
 
@@ -117,8 +114,6 @@ def friends():
     success = load_from_session('success')
 
     global username
-    global user_id
-
     # ================================
     # FEATURE 4
     #
@@ -126,7 +121,7 @@ def friends():
     # ================================
 
     if username is not None:
-        friend_list = requests.get(f"http://socials:5000/friends?user={user_id}").json()
+        friend_list = requests.get(f"http://socials:5000/friends?user={username}").json()
     else:
         friend_list = []
 
@@ -143,10 +138,10 @@ def add_friend():
     # microservice returns True if the friend request is successful (the friend exists & is not already friends), False if otherwise
     # ==============================
 
-    global username, user_id
+    global username
     req_username = request.form['username']
 
-    success = requests.post(f"http://socials:5000/friends?user1={user_id}&user2={req_username}").json()
+    success = requests.post(f"http://socials:5000/friends?user1={username}&user2={req_username}").json()
     save_to_session('success', success)
 
     return redirect('/friends')
@@ -155,7 +150,6 @@ def add_friend():
 @app.route('/playlists')
 def playlists():
     global username
-    global user_id
 
     my_playlists = []
     shared_with_me = []
@@ -167,9 +161,9 @@ def playlists():
         # Get all playlists you created and all playlist that are shared with you. (list of id, title pairs)
         # ================================
 
-        my_playlists = requests.get(f"http://playlists:5000/playlist?owner={user_id}")
+        my_playlists = requests.get(f"http://playlists:5000/playlist?owner={username}")
         my_playlists = my_playlists.json() if my_playlists.content else []
-        shared_with_me = requests.get(f"http://playlists:5000/playlist/shared?user_id={user_id}").json()
+        shared_with_me = requests.get(f"http://playlists:5000/playlist/shared?user_id={username}").json()
 
     return render_template('playlists.html', username=username, password=password, my_playlists=my_playlists, shared_with_me=shared_with_me)
 
@@ -233,6 +227,5 @@ def logout():
     global username, password, user_id
 
     username = None
-    user_id = None
     password = None
     return redirect('/')
