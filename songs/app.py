@@ -37,7 +37,7 @@ def add_song(title, artist):
 
 def song_exists(title, artist):
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM songs (WHERE title = %s AND artist = %s);", (title, artist))
+    cur.execute("SELECT COUNT(*) FROM songs WHERE title = %s AND artist = %s;", (title, artist))
     return bool(cur.fetchone()[0])  # Either True or False
 
 class AllSongsResource(Resource):
@@ -51,11 +51,11 @@ class SongExists(Resource):
         return song_exists(args['title'], args['artist'])
 
 class AddSong(Resource):
-    def put(self):
+    def post(self):
         args = flask_request.args
         return add_song(args['title'], args['artist'])
 
 
-api.add_resource(AllSongsResource, '/songs/')
-api.add_resource(SongExists, '/songs/exist/')
-api.add_resource(AddSong, '/songs/add/')
+api.add_resource(AllSongsResource, '/songs')
+api.add_resource(SongExists, '/songs/exist')
+api.add_resource(AddSong, '/songs/add')

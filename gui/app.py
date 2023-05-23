@@ -164,7 +164,7 @@ def playlists():
 
         my_playlists = requests.get(f"http://playlists:5000/playlist?owner={username}")
         my_playlists = my_playlists.json() if my_playlists.content else []
-        shared_with_me = requests.get(f"http://playlists:5000/playlist/shared?user_id={username}").json()
+        shared_with_me = requests.get(f"http://playlists:5000/playlist/shared?user={username}").json()
 
     return render_template('playlists.html', username=username, password=password, my_playlists=my_playlists, shared_with_me=shared_with_me)
 
@@ -179,7 +179,7 @@ def create_playlist():
     global username
     title = request.form['title']
 
-    requests.put(f"http://playlists:5000/playlist?owner={username}&name={title}")
+    requests.post(f"http://playlists:5000/playlist?owner={username}&name={title}")
 
     return redirect('/playlists')
 
@@ -217,9 +217,7 @@ def invite_user_to_playlist(playlist_id):
     # Share a playlist (represented by an id) with a user.
     # ================================
     recipient = request.form['user']
-
-    recipient_id = requests.get(f"http://authentication:5000/user?username={recipient}").json()
-    requests.post(f"http://playlists:5000/playlist/shared?playlist_id={playlist_id}&user_id={recipient_id}")
+    requests.post(f"http://playlists:5000/playlist/shared?playlist_id={playlist_id}&user={recipient}")
     return redirect(f'/playlists/{playlist_id}')
 
 

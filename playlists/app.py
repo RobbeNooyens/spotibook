@@ -1,3 +1,4 @@
+import requests
 from flask import Flask
 from flask import request as flask_request
 from flask_restful import Resource, Api, reqparse
@@ -8,6 +9,7 @@ parser.add_argument('name')
 parser.add_argument('owner')
 parser.add_argument('playlist_id')
 parser.add_argument('song_id')
+parser.add_argument('user')
 
 app = Flask("playlists")
 api = Api(app)
@@ -20,8 +22,10 @@ while conn is None:
         print("DB connection succesful")
     except psycopg2.OperationalError:
         import time
+
         time.sleep(1)
         print("Retrying DB connection")
+
 
     # The user can create playlists.
     class Playlist(Resource):
@@ -30,42 +34,70 @@ while conn is None:
             cur = conn.cursor()
             cur.execute("SELECT id, name FROM playlist WHERE owner = %s;", (args['owner'],))
             return cur.fetchall()
+
         def post(self):
             args = flask_request.args
-            cur = conn.cursor()
-            cur.execute("INSERT INTO playlist (name, owner) VALUES (%s, %s);", (args['name'], args['owner']))
-            conn.commit()
-            return True
+            try:
+                cur = conn.cursor()
+                cur.execute("INSERT INTO playlist (name, owner) VALUES (%s, %s);", (args['name'], args['owner']))
+                conn.commit()
+                return True
+            except psycopg2.IntegrityError:
+                return False
+
 
     # The user can add songs to a playlist.
     class PlaylistSongs(Resource):
         def post(self):
             args = flask_request.args
-            cur = conn.cursor()
-            cur.execute("INSERT INTO playlist_songs (playlist_id, song_id) VALUES (%s, %s);", (args['playlist_id'], args['song_id']))
-            conn.commit()
+            playlist_id = args['playlist_id']
+            artist = args['artist']
+            title = args['title']
+            # Check if song already exists
+            response = requests.get("http://songs:5000/songs/exist", params={'artist': artist, 'title': title})
+            if not response.ok:
+                return False
+            if not response.json():
+                cur = conn.cursor()
+                # Add song to songs table
+                response = requests.post("http://songs:5000/songs/add", params={'artist': artist, 'title': title})
+                if not response.ok:
+                    return False
+                cur.execute("INSERT INTO playlist_songs (playlist_id, title, artist) VALUES (%s, %s, %s);",
+                            (playlist_id, title, artist))
+                conn.commit()
             return True
 
         def get(self):
             args = flask_request.args
             cur = conn.cursor()
-            cur.execute("SELECT song_id FROM playlist_songs WHERE playlist_id = %s;", (args['playlist_id'],))
-            return [x[0] for x in cur.fetchall()]
+            cur.execute("SELECT title, artist FROM playlist_songs WHERE playlist_id = %s;", (args['playlist_id'],))
+            return cur.fetchall()
+
 
     # The user can share a playlist with another user.
     class SharedPlaylists(Resource):
         def post(self):
             args = flask_request.args
-            cur = conn.cursor()
-            cur.execute("INSERT INTO playlist_editors (playlist_id, user_id) VALUES (%s, %s);", (args['playlist_id'], args['user_id']))
-            conn.commit()
-            return True
+            try:
+                cur = conn.cursor()
+                cur.execute("INSERT INTO playlist_editors (playlist_id, username) VALUES (%s, %s);",
+                            (args['playlist_id'], args['user']))
+                conn.commit()
+                return True
+            except psycopg2.IntegrityError:
+                return False
 
         def get(self):
             args = flask_request.args
             cur = conn.cursor()
-            cur.execute("SELECT playlist.id, playlist.name FROM playlist LEFT JOIN playlist_editors ON playlist.id = playlist_editors.playlist_id WHERE playlist_editors.user_id = %s;", (args['user_id'],))
-            return [x[0] for x in cur.fetchall()]
+            cur.execute("""
+            SELECT playlist.id, playlist.name 
+            FROM playlist LEFT JOIN playlist_editors 
+            ON playlist.id = playlist_editors.playlist_id 
+            WHERE playlist_editors.username = %s;
+            """, (args['user'],))
+            return cur.fetchall()
 
 api.add_resource(Playlist, '/playlist')
 api.add_resource(PlaylistSongs, '/playlist/songs')
