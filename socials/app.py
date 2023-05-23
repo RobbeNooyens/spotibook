@@ -55,3 +55,4 @@ class Friends(Resource):
 
 
 api.add_resource(Friends, '/friends')
+
