@@ -1,5 +1,9 @@
 # Spotibook
 
+## Microservices
+
+![Microservices](Microservices.jpg)
+
 ## API Endpoints
 
 ### Activities
