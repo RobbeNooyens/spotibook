@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import requests
@@ -39,8 +40,23 @@ class Activity(Resource):
         if friends is None or not friends.ok:
             return []
         cur = conn.cursor()
-        cur.execute("SELECT * FROM activity WHERE username IN %s ORDER BY date DESC LIMIT %s;", (tuple(friends.json()), args['results']))
-        return cur.fetchall()
+        app.logger.info(friends.json())
+        cur.execute("SELECT id, username, date, description FROM activity WHERE username IN %s ORDER BY date LIMIT %s;",
+                    (tuple(friends.json()), args['results']))
+        activities = cur.fetchall()
+
+        # Format the activities as a list of dictionaries
+        result = []
+        for activity in activities:
+            activity_dict = (
+                activity[0],
+                activity[1],
+                str(activity[2]),  # Convert date to string
+                activity[3]
+            )
+            result.append(activity_dict)
+
+        return result
 
 
 api.add_resource(Activity, '/activity')

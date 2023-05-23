@@ -121,7 +121,8 @@ def friends():
     # ================================
 
     if username is not None:
-        friend_list = requests.get(f"http://socials:5000/friends?user={username}").json()
+        friends_request = requests.get(f"http://socials:5000/friends?user={username}")
+        friend_list = friends_request.json() if friends_request.ok else []
     else:
         friend_list = []
 
