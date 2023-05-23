@@ -25,13 +25,16 @@ while conn is None:
 
 
 class Activity(Resource):
-    def put(self):
+    def post(self):
         args = flask_request.args
-        cur = conn.cursor()
-        cur.execute("INSERT INTO activity (username, date, description) VALUES (%s, %s, %s);",
-                    (args['user'], datetime.now(), args['description']))
-        conn.commit()
-        return True
+        try:
+            cur = conn.cursor()
+            cur.execute("INSERT INTO activity (username, date, description) VALUES (%s, %s, %s);",
+                        (args['user'], datetime.now(), args['description']))
+            conn.commit()
+            return True
+        except psycopg2.IntegrityError:
+            return False
 
     def get(self):
         args = flask_request.args
@@ -41,7 +44,7 @@ class Activity(Resource):
             return []
         cur = conn.cursor()
         app.logger.info(friends.json())
-        cur.execute("SELECT id, username, date, description FROM activity WHERE username IN %s ORDER BY date LIMIT %s;",
+        cur.execute("SELECT id, username, date, description FROM activity WHERE username IN %s ORDER BY date DESC LIMIT %s;",
                     (tuple(friends.json()), args['results']))
         activities = cur.fetchall()
 

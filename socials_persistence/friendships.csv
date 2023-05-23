@@ -1,3 +1,7 @@
 username,friend
-robbe,test
-test,robbe
+test1,test2
+test1,test3
+test2,test1
+test2,test4
+test3,test4
+test3,test5

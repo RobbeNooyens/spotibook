@@ -35,6 +35,8 @@ def add_friend(user1, user2):
             return False
         cur.execute("INSERT INTO friendship (username, friend) VALUES (%s, %s);", (user1, user2))
         conn.commit()
+        requests.post("http://activities:5000/activity",
+                      params={'user': user1, 'description': f"Just became friends with {user2}"})
         return True
     except psycopg2.IntegrityError:
         return False

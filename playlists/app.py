@@ -41,7 +41,8 @@ while conn is None:
                 cur = conn.cursor()
                 cur.execute("INSERT INTO playlist (name, owner) VALUES (%s, %s);", (args['name'], args['owner']))
                 conn.commit()
-                return True
+                # Save the action in the activity log
+                requests.post("http://activities:5000/activity", params={'user': args['owner'], 'description': f"Created playlist {args['name']}"})
             except psycopg2.IntegrityError:
                 return False
 
@@ -53,9 +54,10 @@ while conn is None:
             playlist_id = args['playlist_id']
             artist = args['artist']
             title = args['title']
+            user = args['user']
             # Check if song already exists
             response = requests.get("http://songs:5000/songs/exist", params={'artist': artist, 'title': title})
-            if not response.ok:
+            if not response.ok or response.json():
                 return False
             if not response.json():
                 cur = conn.cursor()
@@ -63,9 +65,14 @@ while conn is None:
                 response = requests.post("http://songs:5000/songs/add", params={'artist': artist, 'title': title})
                 if not response.ok:
                     return False
-                cur.execute("INSERT INTO playlist_songs (playlist_id, title, artist) VALUES (%s, %s, %s);",
-                            (playlist_id, title, artist))
-                conn.commit()
+                try:
+                    cur.execute("INSERT INTO playlist_songs (playlist_id, title, artist) VALUES (%s, %s, %s);",
+                                (playlist_id, title, artist))
+                    conn.commit()
+                except psycopg2.IntegrityError:
+                    return False
+                requests.post("http://activities:5000/activity", params={'user': user, 'description': f"Added song {title} to playlist {playlist_id}"})
+
             return True
 
         def get(self):
@@ -84,6 +91,8 @@ while conn is None:
                 cur.execute("INSERT INTO playlist_editors (playlist_id, username) VALUES (%s, %s);",
                             (args['playlist_id'], args['user']))
                 conn.commit()
+                requests.post("http://activities:5000/activity",
+                              params={'user': args['owner'], 'description': f"Shared a playlist with {args['user']}"})
                 return True
             except psycopg2.IntegrityError:
                 return False

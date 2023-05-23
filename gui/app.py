@@ -5,8 +5,8 @@ app = Flask(__name__)
 
 
 # The Username & Password of the currently logged-in User
-username = "test"
-password = "test"
+username = None
+password = None
 
 session_data = dict()
 
@@ -203,8 +203,9 @@ def add_song_to_playlist(playlist_id):
     # Add a song (represented by a title & artist) to a playlist (represented by an id)
     # ================================
     title, artist = request.form['title'], request.form['artist']
+    global username
 
-    requests.post(f"http://playlists:5000/playlist/songs?playlist_id={playlist_id}&title={title}&artist={artist}")
+    requests.post(f"http://playlists:5000/playlist/songs?playlist_id={playlist_id}&title={title}&artist={artist}&user={username}")
     # TODO: call
     return redirect(f'/playlists/{playlist_id}')
 
@@ -217,7 +218,8 @@ def invite_user_to_playlist(playlist_id):
     # Share a playlist (represented by an id) with a user.
     # ================================
     recipient = request.form['user']
-    requests.post(f"http://playlists:5000/playlist/shared?playlist_id={playlist_id}&user={recipient}")
+    global username
+    requests.post(f"http://playlists:5000/playlist/shared?playlist_id={playlist_id}&user={recipient}&owner={username}")
     return redirect(f'/playlists/{playlist_id}')
 
 
